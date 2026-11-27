@@ -9,7 +9,7 @@ importers:
   .:
     dependencies:
       '@dsh-local/view-f3397ba6-d12b-47df-93a4-aa5ca4435644':
-        specifier: link:C:/Users/nicko/.dsh/profiles/desktop/created-plugins/f3397ba6-d12b-47df-93a4-aa5ca4435644
+        specifier: link:./created-plugins/f3397ba6-d12b-47df-93a4-aa5ca4435644
         version: link:created-plugins/f3397ba6-d12b-47df-93a4-aa5ca4435644
       dsh-kimino-theme:
         specifier: 68.4.2

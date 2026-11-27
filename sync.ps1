@@ -48,13 +48,45 @@ function Write-Step([string]$Text) { Write-Host "==> $Text" -ForegroundColor Cya
 function Write-Warn([string]$Text) { Write-Host "!   $Text" -ForegroundColor Yellow }
 function Write-Ok([string]$Text) { Write-Host "OK  $Text" -ForegroundColor Green }
 
+function Invoke-Native {
+    # Запускает внешнюю команду так, чтобы её stderr не превращался в terminating error (PowerShell 5.1).
+    param(
+        [string]$FilePath,
+        [string[]]$Arguments,
+        [switch]$ShowOutput
+    )
+
+    $previous = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        $lines = @(& $FilePath @Arguments 2>&1 | ForEach-Object { "$_" })
+        $code = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $previous
+    }
+    if ($ShowOutput) { $lines | ForEach-Object { Write-Host "    $_" } }
+    return [pscustomobject]@{ Output = ($lines -join [Environment]::NewLine); ExitCode = $code }
+}
+
+function Invoke-Git {
+    # Возвращает текст вывода git; $null, если команда завершилась с ошибкой.
+    param([string[]]$GitArgs)
+    $result = Invoke-Native -FilePath 'git' -Arguments $GitArgs
+    if ($result.ExitCode -ne 0) { return $null }
+    return $result.Output.Trim()
+}
+
 function Copy-Tree {
     param([string]$Source, [string]$Destination, [switch]$Mirror)
 
     if (-not (Test-Path -LiteralPath $Source)) { Write-Warn "нет каталога: $Source"; return }
     $mode = if ($Mirror) { '/MIR' } else { '/E' }
-    & robocopy $Source $Destination $mode /XD node_modules .git .dsh-market .plugin-manager /XF *.log /NFL /NDL /NJH /NJS /NP /R:1 /W:1 | Out-Null
-    if ($LASTEXITCODE -ge 8) { throw "robocopy завершился с кодом $LASTEXITCODE ($Source -> $Destination)" }
+    $result = Invoke-Native -FilePath 'robocopy' -Arguments @(
+        $Source, $Destination, $mode,
+        '/XD', 'node_modules', '.git', '.dsh-market', '.plugin-manager',
+        '/XF', '*.log', '/NFL', '/NDL', '/NJH', '/NJS', '/NP', '/R:1', '/W:1'
+    )
+    if ($result.ExitCode -ge 8) { throw "robocopy завершился с кодом $($result.ExitCode) ($Source -> $Destination)" }
 }
 
 function ConvertTo-PortableLinks {
@@ -79,10 +111,10 @@ function ConvertTo-AbsoluteLinks {
 }
 
 function Get-DshVersion {
-    try {
-        $raw = & dsh -V 2>$null
-        if ($raw) { return ($raw | Select-Object -First 1).ToString().Trim() }
-    } catch { }
+    $result = Invoke-Native -FilePath 'dsh' -Arguments @('-V')
+    if ($result.ExitCode -eq 0 -and $result.Output.Trim()) {
+        return $result.Output.Trim().Split("`n")[0].Trim()
+    }
     $candidate = Join-Path $env:LOCALAPPDATA 'Programs\DeepSeek Harness\resources\app.asar\dsh\node_modules\@deepseek-ai\dsh\package.json'
     if (Test-Path -LiteralPath $candidate) { return (Get-Content -LiteralPath $candidate -Raw | ConvertFrom-Json).version }
     return $null
@@ -108,47 +140,51 @@ function Invoke-Push {
     }
     Copy-Tree -Source $SkillsDir -Destination $RepoSkills -Mirror
 
-    $packageJson = Join-Path $RepoProfile 'package.json'
-    if (Test-Path -LiteralPath $packageJson) { ConvertTo-PortableLinks -Path $packageJson }
+    $linkFiles = @('package.json', 'pnpm-lock.yaml')
+    foreach ($name in $linkFiles) {
+        $path = Join-Path $RepoProfile $name
+        if (Test-Path -LiteralPath $path) { ConvertTo-PortableLinks -Path $path }
+    }
 
     $version = Get-DshVersion
-    if ($version) { [System.IO.File]::WriteAllText($VersionFile, $version + [Environment]::NewLine, (New-Object System.Text.UTF8Encoding($false))) }
+    if ($version) {
+        [System.IO.File]::WriteAllText($VersionFile, $version + [Environment]::NewLine, (New-Object System.Text.UTF8Encoding($false)))
+    }
 
     Write-Step 'Фиксирую изменения в git'
-    & git -C $RepoRoot add -A
-    if ($LASTEXITCODE -ne 0) { throw 'git add завершился с ошибкой' }
-    $pending = & git -C $RepoRoot status --porcelain
+    if ($null -eq (Invoke-Git -GitArgs @('-C', $RepoRoot, 'add', '-A'))) { throw 'git add завершился с ошибкой' }
+    $pending = Invoke-Git -GitArgs @('-C', $RepoRoot, 'status', '--porcelain')
     if (-not $pending) {
         Write-Ok 'изменений нет'
     } elseif ($NoCommit) {
         Write-Warn 'есть изменения, коммит пропущен (-NoCommit)'
     } else {
         if (-not $Message) { $Message = "sync: $([DateTime]::Now.ToString('yyyy-MM-dd HH:mm:ss'))" }
-        & git -C $RepoRoot commit -m $Message | Out-Null
-        if ($LASTEXITCODE -ne 0) { throw 'git commit завершился с ошибкой' }
+        if ($null -eq (Invoke-Git -GitArgs @('-C', $RepoRoot, 'commit', '-m', $Message))) { throw 'git commit завершился с ошибкой' }
         Write-Ok "закоммичено: $Message"
     }
 
     if ($NoPush) { Write-Warn 'отправка пропущена (-NoPush)'; return }
-    $remote = & git -C $RepoRoot remote get-url origin 2>$null
+    $remote = Invoke-Git -GitArgs @('-C', $RepoRoot, 'remote', 'get-url', 'origin')
     if (-not $remote) {
         Write-Warn 'удалённый репозиторий не настроен: git remote add origin <url>'
         return
     }
-    & git -C $RepoRoot pull --rebase --autostash 2>&1 | Out-Null
-    & git -C $RepoRoot push
-    if ($LASTEXITCODE -ne 0) { throw 'git push завершился с ошибкой' }
+    Invoke-Git -GitArgs @('-C', $RepoRoot, 'pull', '--rebase', '--autostash') | Out-Null
+    $push = Invoke-Native -FilePath 'git' -Arguments @('-C', $RepoRoot, 'push') -ShowOutput
+    if ($push.ExitCode -ne 0) { throw 'git push завершился с ошибкой' }
     Write-Ok "отправлено в $remote"
 }
 
 function Invoke-Pull {
     if (-not (Test-Path -LiteralPath $RepoProfile)) { throw "в репозитории нет каталога profile: $RepoProfile" }
 
-    $remote = & git -C $RepoRoot remote get-url origin 2>$null
+    $remote = Invoke-Git -GitArgs @('-C', $RepoRoot, 'remote', 'get-url', 'origin')
     if ($remote) {
         Write-Step 'Забираю свежие изменения из git'
-        & git -C $RepoRoot pull --ff-only 2>&1 | Out-Null
-        if ($LASTEXITCODE -ne 0) { Write-Warn 'git pull не удался (локальные правки?) — применяю то, что есть' }
+        if ($null -eq (Invoke-Git -GitArgs @('-C', $RepoRoot, 'pull', '--ff-only'))) {
+            Write-Warn 'git pull не удался (локальные правки?) — применяю то, что есть'
+        }
     }
 
     if (Test-Path -LiteralPath $VersionFile) {
@@ -178,23 +214,30 @@ function Invoke-Pull {
     }
     Copy-Tree -Source $RepoSkills -Destination $SkillsDir
 
-    $packageJson = Join-Path $ProfileDir 'package.json'
-    if (Test-Path -LiteralPath $packageJson) { ConvertTo-AbsoluteLinks -Path $packageJson -TargetProfileDir $ProfileDir }
+    $linkFiles = @('package.json', 'pnpm-lock.yaml')
+    foreach ($name in $linkFiles) {
+        $path = Join-Path $ProfileDir $name
+        if (Test-Path -LiteralPath $path) { ConvertTo-AbsoluteLinks -Path $path -TargetProfileDir $ProfileDir }
+    }
 
     if ($NoInstall) { Write-Warn 'установка зависимостей пропущена (-NoInstall)'; return }
     Write-Step 'Ставлю зависимости профиля (dsh plugin install)'
-    & dsh plugin --profile $ProfileName install
-    if ($LASTEXITCODE -ne 0) { throw "dsh plugin install завершился с кодом $LASTEXITCODE" }
+    $install = Invoke-Native -FilePath 'dsh' -Arguments @('plugin', '--profile', $ProfileName, 'install') -ShowOutput
+    if ($install.ExitCode -ne 0) { throw "dsh plugin install завершился с кодом $($install.ExitCode)" }
     Write-Ok 'готово, перезапустите DeepSeek Harness'
 }
 
 function Invoke-Status {
     Write-Step "Репозиторий: $RepoRoot"
-    $remote = & git -C $RepoRoot remote get-url origin 2>$null
+    $remote = Invoke-Git -GitArgs @('-C', $RepoRoot, 'remote', 'get-url', 'origin')
     if ($remote) { Write-Host "    origin: $remote" }
-    $dirty = & git -C $RepoRoot status --porcelain
-    if ($dirty) { Write-Host '    незакоммиченные изменения:'; $dirty | ForEach-Object { Write-Host "      $_" } }
-    else { Write-Ok 'репозиторий чистый' }
+    $dirty = Invoke-Git -GitArgs @('-C', $RepoRoot, 'status', '--porcelain')
+    if ($dirty) {
+        Write-Host '    незакоммиченные изменения:'
+        $dirty.Split("`n") | ForEach-Object { Write-Host "      $($_.TrimEnd())" }
+    } else {
+        Write-Ok 'репозиторий чистый'
+    }
 
     Write-Step "Сравниваю с профилем: $ProfileDir"
     foreach ($file in $PortableFiles) {
@@ -205,7 +248,8 @@ function Invoke-Status {
         $normalized = [System.IO.File]::ReadAllText($left)
         $live = [System.IO.File]::ReadAllText($right)
         $live = [regex]::Replace($live, 'link:(?:[A-Za-z]:)?[^"]*?[/\\]created-plugins[/\\]([^"/\\]+)', 'link:./created-plugins/$1')
-        if ($normalized -eq $live) { Write-Host "    $file — совпадает" } else { Write-Host "    $file — РАСХОДИТСЯ" -ForegroundColor Yellow }
+        if ($normalized -eq $live) { Write-Host "    $file — совпадает" }
+        else { Write-Host "    $file — РАСХОДИТСЯ" -ForegroundColor Yellow }
     }
 }
 
