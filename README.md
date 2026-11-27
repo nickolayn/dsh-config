@@ -22,9 +22,9 @@
 ## Быстрый старт на новой машине
 
 ```powershell
-# 1. Поставить DeepSeek Harness той же версии, что в DSH_VERSION
+# 1. Поставить DeepSeek Harness той же версии, что в DSH_VERSION, и git
 # 2. Склонировать репозиторий в любое место
-git clone git@github.com:nickolayn/dsh-config.git "$env:USERPROFILE\dsh-config"
+git clone https://github.com/nickolayn/dsh-config.git "$env:USERPROFILE\dsh-config"
 # 3. Разложить конфигурацию и поставить зависимости
 cd "$env:USERPROFILE\dsh-config"
 .\sync.ps1 pull

@@ -5,7 +5,7 @@ description: Use for Russian legal documents — drafting or revising claims (и
 
 # Юридические документы РФ
 
-Набор лежит в `C:\Users\nicko\OneDrive\Документы\deepseek-harness\default-workspace\legal`
+Набор лежит в каталоге `legal` корня рабочего воркспейса (далее `LEGAL`).
 (далее `LEGAL`). Он существует потому, что модель ошибается в трёх местах: арифметика,
 редакции норм и вёрстка. Первое и третье закрывают скрипты, второе — чек-лист и юрист.
 
