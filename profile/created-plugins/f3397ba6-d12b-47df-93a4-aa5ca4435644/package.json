@@ -1,0 +1,37 @@
+{
+  "name": "@dsh-local/view-f3397ba6-d12b-47df-93a4-aa5ca4435644",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Interactive 2027 budget dashboard: channel volume and price drivers, inflation, OPEX, CAPEX and loan rate recalculate revenue, margins, profit, FCF, leverage and the cash cycle, compared with the base scenario.",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "docs",
+    "icon.svg",
+    "README.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-sidebar"
+      ]
+    }
+  }
+}

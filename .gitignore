@@ -1,0 +1,9 @@
+# Временные файлы и то, что восстанавливается автоматически
+profile/node_modules/
+profile/.pnpm/
+profile/.dsh-market/
+profile/.plugin-manager/
+**/*.log
+**/.DS_Store
+Thumbs.db
+*.bak-*

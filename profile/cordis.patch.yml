@@ -1,0 +1,89 @@
+# Your patch layer for this dsh profile, applied after every bundle layer:
+# a top-level YAML array of loader patch entries (id-targeted config
+# overrides, disables, and insert lists; `!!js` expressions allowed).
+- id: ui-chat
+  name: "@deepseek-ai/dsh-client-ui-chat"
+  config:
+    transcriptView: standard
+    performanceUsage: detailed
+- id: ui-settings
+  name: "@deepseek-ai/dsh-client-ui-settings"
+  config:
+    enabled: true
+- id: ui-settings-account
+  name: "@deepseek-ai/dsh-client-ui-settings-account"
+  config:
+    version: 1
+    step: done
+    usage: detailed
+    developerTools: true
+    purpose: null
+    process: standard
+    completion: api-key
+
+# Russian language pack (see plugins/dsh-locale-ru)
+- insert:
+    - id: locale-ru
+      name: './plugins/dsh-locale-ru/lib/index.js'
+- id: permission
+  name: "@deepseek-ai/dsh-permission-presets"
+  config:
+    presets:
+      read-only:
+        sandbox: read-only
+        approval: ask
+      workspace-write:
+        sandbox: workspace-write
+        approval: ask
+      danger-full-access:
+        sandbox: danger-full-access
+        approval: never
+    defaultPreset: danger-full-access
+- id: agent-preset-registry
+  name: "@deepseek-ai/dsh-agent-preset-registry"
+  config:
+    default: standard
+    selectedDefault: cordis
+- id: locale
+  name: "@deepseek-ai/dsh-client-locale"
+  config:
+    preference: ru
+- id: ui-token-viewer
+  disabled: true
+  name: 'dsh-token-viewer' # dsh-market
+
+# GigaChat через локальный OpenAI-совместимый шлюз
+# (C:\Users\nicko\gigachain\gateway\gateway.py, порт 8877)
+- id: llm-pi-ai
+  config:
+    providers:
+      gigachat:
+        displayName: GigaChat
+        api: openai-completions
+        baseURL: http://127.0.0.1:8877/v1
+        # ключ не нужен: шлюз не проверяет Authorization, но pi-ai требует,
+        # чтобы заголовок авторизации присутствовал в запросе
+        headers:
+          Authorization: Bearer gigachat-local
+        models:
+          - id: GigaChat-3-Lightning
+            name: GigaChat 3 Lightning
+            contextWindow: 131072
+            maxTokens: 8192
+          - id: GigaChat-3-Pro
+            name: GigaChat 3 Pro
+            contextWindow: 131072
+            maxTokens: 8192
+          - id: GigaChat-3-Ultra
+            name: GigaChat 3 Ultra
+            contextWindow: 131072
+            maxTokens: 8192
+          - id: GigaChat-2
+            name: GigaChat 2
+            contextWindow: 131072
+            maxTokens: 8192
+- id: agent-default-model
+  name: "@deepseek-ai/dsh-agent-default-model"
+  config:
+    provider: deepseek-account
+    model: deepseek-flash

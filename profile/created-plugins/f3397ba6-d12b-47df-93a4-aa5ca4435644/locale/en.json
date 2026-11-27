@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "title": "Budget 2027 dashboard",
+    "description": "Interactive 2027 budget dashboard for a CFO: change channel volumes and prices, raw-material and payroll inflation, marketing, trade marketing, logistics, R&D, CAPEX and the new-loan rate, and see revenue, gross and EBITDA margins, net profit, FCF, net debt/EBITDA and the cash conversion cycle, plus the deviation from the base scenario and monthly revenue. The scenario is saved in this browser on this computer and restored on the next visit; one scenario is kept, with no scenario library or export. Opens from the left sidebar entry «Budget 2027».",
+    "detail": "docs/DETAIL.md"
+  }
+}
