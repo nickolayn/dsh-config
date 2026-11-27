@@ -7,3 +7,4 @@ profile/.plugin-manager/
 **/.DS_Store
 Thumbs.db
 *.bak-*
+/verify/last.json
