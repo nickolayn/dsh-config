@@ -11,6 +11,9 @@ importers:
       '@dsh-local/view-f3397ba6-d12b-47df-93a4-aa5ca4435644':
         specifier: link:./created-plugins/f3397ba6-d12b-47df-93a4-aa5ca4435644
         version: link:created-plugins/f3397ba6-d12b-47df-93a4-aa5ca4435644
+      '@dsh-local/view-hotel-crm':
+        specifier: link:./created-plugins/hotel-crm
+        version: link:created-plugins/hotel-crm
       dsh-kimino-theme:
         specifier: 68.4.2
         version: 68.4.2

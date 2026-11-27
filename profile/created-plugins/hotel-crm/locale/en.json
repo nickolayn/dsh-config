@@ -1,0 +1,8 @@
+{
+  "meta": {
+    "title": "Hotel requests",
+    "description": "Live board of hotel CRM requests: active count, overdue SLA, priorities and assignees, read through the local bridge on 127.0.0.1:8878.",
+    "detail": "docs/DETAIL.md"
+  },
+  "panel": "Hotel requests"
+}

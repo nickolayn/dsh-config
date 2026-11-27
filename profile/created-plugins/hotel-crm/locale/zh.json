@@ -1,0 +1,8 @@
+{
+  "meta": {
+    "title": "酒店工单",
+    "description": "酒店 CRM 工单实时面板：进行中数量、SLA 超时、优先级与负责人，通过 127.0.0.1:8878 的本地桥接服务读取。",
+    "detail": "docs/DETAIL.md"
+  },
+  "panel": "酒店工单"
+}

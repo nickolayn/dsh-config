@@ -63,6 +63,29 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\bootstrap.ps1
 любой машины можно проверить из репозитория, не имея к ней прямого доступа. Код возврата 1, если есть
 проблемы (🔴 fail), 0 — если только предупреждения.
 
+## Мост для плагинов (CRM отеля, TeamJet)
+
+Страницы плагинов работают в браузере DSH, поэтому читать чужие API им мешает CORS,
+а токены (TeamJet) нельзя держать в браузерном коде. Мост — единственное место с сетью и секретами:
+
+```powershell
+cd "$env:USERPROFILE\dsh-config"
+.\bridge\start.cmd          # или: node bridge\bridge.mjs
+```
+
+Слушает только `127.0.0.1:8878`, зависимостей нет. Настройки — `bridge/bridge.config.json`
+(создаётся при первом запуске, в git не попадает): адрес CRM, `userId` для записи,
+адрес и токен TeamJet.
+
+| Маршрут | Что делает |
+|---|---|
+| `GET /health` | самопроверка и текущие настройки |
+| `GET /crm/state` | прокси на `{crm}/api/state` — 100 заявок, SLA считает CRM |
+| `GET /crm/task/:id` | одна заявка |
+| `POST /crm/tasks`, `POST /crm/tasks/:id/status` | запись (нужен `userId` в настройках) |
+| `GET /teamjet/probe` | проверка доступа к TeamJet (нужны токен и путь) |
+| `GET /teamjet/tasks` | список заявок TeamJet (нужны токен и путь) |
+
 ## Если PowerShell запрещает скрипты
 
 Корпоративная политика может блокировать запуск `.ps1` — ошибка `PSSecurityException: выполнение сценариев

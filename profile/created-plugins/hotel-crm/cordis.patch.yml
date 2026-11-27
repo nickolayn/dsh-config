@@ -1,0 +1,3 @@
+- insert:
+    - id: '@dsh-local/view-hotel-crm:panel'
+      name: '@dsh-local/view-hotel-crm'

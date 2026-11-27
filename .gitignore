@@ -8,3 +8,6 @@ profile/.plugin-manager/
 Thumbs.db
 *.bak-*
 /verify/last.json
+
+# личные настройки моста (токены)
+bridge/bridge.config.json

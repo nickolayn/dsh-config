@@ -3,6 +3,7 @@
   "private": true,
   "dependencies": {
     "@dsh-local/view-f3397ba6-d12b-47df-93a4-aa5ca4435644": "link:./created-plugins/f3397ba6-d12b-47df-93a4-aa5ca4435644",
+    "@dsh-local/view-hotel-crm": "link:./created-plugins/hotel-crm",
     "dsh-kimino-theme": "68.4.2",
     "dsh-token-viewer": "github:qwert702/dsh-token-viewer",
     "dsh-whale-widget": "0.4.2",
@@ -20,7 +21,8 @@
         "dshmarket",
         "dsh-kimino-theme",
         "dsh-whale-widget",
-        "@dsh-local/view-f3397ba6-d12b-47df-93a4-aa5ca4435644"
+        "@dsh-local/view-f3397ba6-d12b-47df-93a4-aa5ca4435644",
+        "@dsh-local/view-hotel-crm"
       ]
     }
   }
