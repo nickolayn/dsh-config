@@ -110,10 +110,27 @@ function ConvertTo-AbsoluteLinks {
     }
 }
 
+function Resolve-DshCli {
+    # Ищет CLI: сначала PATH, затем клиент, который ставит Desktop.
+    $command = Get-Command dsh -ErrorAction SilentlyContinue
+    if ($command) { return $command.Source }
+    $candidates = @(
+        (Join-Path $env:LOCALAPPDATA 'Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd'),
+        (Join-Path $env:LOCALAPPDATA 'Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.ps1')
+    )
+    foreach ($candidate in $candidates) {
+        if (Test-Path -LiteralPath $candidate) { return $candidate }
+    }
+    return $null
+}
+
 function Get-DshVersion {
-    $result = Invoke-Native -FilePath 'dsh' -Arguments @('-V')
-    if ($result.ExitCode -eq 0 -and $result.Output.Trim()) {
-        return $result.Output.Trim().Split("`n")[0].Trim()
+    $cli = Resolve-DshCli
+    if ($cli) {
+        $result = Invoke-Native -FilePath $cli -Arguments @('-V')
+        if ($result.ExitCode -eq 0 -and $result.Output.Trim()) {
+            return $result.Output.Trim().Split("`n")[0].Trim()
+        }
     }
     $candidate = Join-Path $env:LOCALAPPDATA 'Programs\DeepSeek Harness\resources\app.asar\dsh\node_modules\@deepseek-ai\dsh\package.json'
     if (Test-Path -LiteralPath $candidate) { return (Get-Content -LiteralPath $candidate -Raw | ConvertFrom-Json).version }
@@ -172,18 +189,28 @@ function Invoke-Push {
     }
     Invoke-Git -GitArgs @('-C', $RepoRoot, 'pull', '--rebase', '--autostash') | Out-Null
     $push = Invoke-Native -FilePath 'git' -Arguments @('-C', $RepoRoot, 'push') -ShowOutput
-    if ($push.ExitCode -ne 0) { throw 'git push завершился с ошибкой' }
+    if ($push.ExitCode -ne 0) {
+        Write-Warn 'git push не удался. Если это приватный репозиторий — нужна авторизация GitHub на этой машине:'
+        Write-Warn '  gh auth login   (или)   git config --global credential.helper manager'
+        throw 'git push завершился с ошибкой'
+    }
     Write-Ok "отправлено в $remote"
 }
 
 function Invoke-Pull {
     if (-not (Test-Path -LiteralPath $RepoProfile)) { throw "в репозитории нет каталога profile: $RepoProfile" }
 
+    if (-not (Test-Path -LiteralPath $ProfileDir)) {
+        Write-Warn "профиль не найден: $ProfileDir"
+        Write-Warn 'сначала запустите DeepSeek Harness один раз — он создаст профиль, — затем повторите pull'
+        throw 'профиль DSH ещё не создан'
+    }
+
     $remote = Invoke-Git -GitArgs @('-C', $RepoRoot, 'remote', 'get-url', 'origin')
     if ($remote) {
         Write-Step 'Забираю свежие изменения из git'
         if ($null -eq (Invoke-Git -GitArgs @('-C', $RepoRoot, 'pull', '--ff-only'))) {
-            Write-Warn 'git pull не удался (локальные правки?) — применяю то, что есть'
+            Write-Warn 'git pull не удался (нет авторизации или локальные правки) — применяю то, что есть'
         }
     }
 
@@ -221,8 +248,14 @@ function Invoke-Pull {
     }
 
     if ($NoInstall) { Write-Warn 'установка зависимостей пропущена (-NoInstall)'; return }
-    Write-Step 'Ставлю зависимости профиля (dsh plugin install)'
-    $install = Invoke-Native -FilePath 'dsh' -Arguments @('plugin', '--profile', $ProfileName, 'install') -ShowOutput
+    $cli = Resolve-DshCli
+    if (-not $cli) {
+        Write-Warn 'не нашёл CLI DeepSeek Harness (команда dsh)'
+        Write-Warn 'установите его через меню приложения: Manage dsh Command, затем повторите: dsh plugin --profile ' + $ProfileName + ' install'
+        return
+    }
+    Write-Step "Ставлю зависимости профиля (dsh plugin install): $cli"
+    $install = Invoke-Native -FilePath $cli -Arguments @('plugin', '--profile', $ProfileName, 'install') -ShowOutput
     if ($install.ExitCode -ne 0) { throw "dsh plugin install завершился с кодом $($install.ExitCode)" }
     Write-Ok 'готово, перезапустите DeepSeek Harness'
 }

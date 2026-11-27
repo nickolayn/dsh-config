@@ -23,13 +23,41 @@
 
 ```powershell
 # 1. Поставить DeepSeek Harness той же версии, что в DSH_VERSION, и git
-# 2. Склонировать репозиторий в любое место
+# 2. Один раз запустить DeepSeek Harness — он создаст профиль в %USERPROFILE%\.dsh\profiles\desktop
+# 3. Авторизовать GitHub (репозиторий приватный), см. раздел «Если git не авторизован»
+# 4. Склонировать репозиторий в любое место
 git clone https://github.com/nickolayn/dsh-config.git "$env:USERPROFILE\dsh-config"
-# 3. Разложить конфигурацию и поставить зависимости
+# 5. Разложить конфигурацию и поставить зависимости
 cd "$env:USERPROFILE\dsh-config"
 .\sync.ps1 pull
-# 4. Перезапустить приложение, затем ввести ключи API в Settings -> Providers (они не хранятся в git)
+# 6. Перезапустить приложение, затем ввести ключи API в Settings -> Providers (они не хранятся в git)
 ```
+
+Порядок важен: `pull` раскладывает файлы в существующий профиль, поэтому приложение должно быть
+запущено хотя бы раз до него — иначе скрипт остановится с подсказкой.
+
+## Если git не авторизован
+
+Для приватного репозитория без авторизации GitHub отвечает `remote: Repository not found` — это не
+опечатка в адресе. Варианты, от лучшего к простому:
+
+```powershell
+# Вариант A: gh CLI (если установлен)
+gh auth login
+
+# Вариант B: Git Credential Manager — после этого clone откроет окно входа в браузере
+git config --global credential.helper manager
+git clone https://github.com/nickolayn/dsh-config.git "$env:USERPROFILE\dsh-config"
+
+# Вариант C: без git вообще — скачать ZIP в браузере (вы уже вошли в GitHub)
+#   https://github.com/nickolayn/dsh-config/archive/refs/heads/main.zip
+#   распаковать в %USERPROFILE%\dsh-config, затем: cd "$env:USERPROFILE\dsh-config"; .\sync.ps1 pull
+#   Когда появится авторизация — привязать git к этой папке:
+#   git init; git remote add origin https://github.com/nickolayn/dsh-config.git; git fetch; git reset --hard origin/main
+```
+
+Если в браузере вход уже есть, а git всё равно отказывает, значит в Credential Manager лежит токен
+другого аккаунта: `cmdkey /delete:git:https://github.com`, затем повторить clone.
 
 ## Ежедневное использование
 
@@ -58,3 +86,8 @@ cd "$env:USERPROFILE\dsh-config"
 - **История сессий** не синхронизируется: каталог сессий кодирует путь воркспейса, на другой машине он иной.
   Нужен диалог — экспортируй его или сохрани итог в файлы проекта.
 - **Рабочие файлы** проектов лежат не здесь, а в OneDrive и синхронизируются OneDrive.
+- **Имя пользователя Windows может отличаться** (`nicko` дома, `Николай` на работе) — в скрипте нет
+  зашитых путей: профиль берётся из `$env:USERPROFILE`, а абсолютные `link:` на локальный плагин
+  скрипт пересчитывает под ту машину, где выполняется `pull`. Кириллица в пути поддерживается.
+- **CLI `dsh`** скрипт ищет сам: сначала в `PATH`, затем в `%LOCALAPPDATA%\Programs\DeepSeek Harness\resources\runtime\cli\bin`.
+  Если не нашёл — скажет, что включить в меню приложения (Manage dsh Command).
