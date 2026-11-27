@@ -149,9 +149,10 @@ if ($ProfileDir -ne $defaultProfileDir -and -not $NoInstall) {
 if (Get-Process -Name 'DeepSeek Harness' -ErrorAction SilentlyContinue) {
     Write-Warn 'приложение запущено: если установка зависимостей не удастся, закройте его и повторите pull'
 }
-$syncParams = @{ Command = 'pull'; ProfileName = $ProfileName; ProfileDir = $ProfileDir }
+$syncParams = @{ Command = 'pull'; ProfileName = $ProfileName; ProfileDir = $ProfileDir; RepoRoot = $Target }
 if ($NoInstall) { $syncParams['NoInstall'] = $true }
-& $syncScript @syncParams
+# Через scriptblock, чтобы работало и при запрете ExecutionPolicy на запуск .ps1.
+& ([scriptblock]::Create((Get-Content -Raw -LiteralPath $syncScript))) @syncParams
 if (-not $?) { Write-Warn 'sync.ps1 завершился с ошибкой — смотрите сообщения выше'; exit 4 }
 
 # 6. итог

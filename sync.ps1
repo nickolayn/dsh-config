@@ -5,6 +5,9 @@ param(
     [ValidateSet('push', 'pull', 'status')]
     [string]$Command,
 
+    # Корень репозитория. Нужен, когда скрипт запускают без файла (scriptblock), где $PSScriptRoot пуст.
+    [string]$RepoRoot,
+
     # Имя профиля DSH, которое синхронизируем.
     [string]$ProfileName = 'desktop',
 
@@ -28,7 +31,9 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$RepoRoot = $PSScriptRoot
+# $PSScriptRoot пуст, если скрипт запущен из scriptblock (обход политики ExecutionPolicy).
+if (-not $RepoRoot) { $RepoRoot = $PSScriptRoot }
+if (-not $RepoRoot) { $RepoRoot = (Get-Location).Path }
 $RepoProfile = Join-Path $RepoRoot 'profile'
 $RepoSkills = Join-Path $RepoRoot 'skills'
 $VersionFile = Join-Path $RepoRoot 'DSH_VERSION'
