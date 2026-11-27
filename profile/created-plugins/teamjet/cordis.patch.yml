@@ -1,0 +1,3 @@
+- insert:
+    - id: '@dsh-local/view-teamjet:panel'
+      name: '@dsh-local/view-teamjet'

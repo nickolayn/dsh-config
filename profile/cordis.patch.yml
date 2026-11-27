@@ -48,9 +48,6 @@
   name: "@deepseek-ai/dsh-client-locale"
   config:
     preference: ru
-- id: ui-token-viewer
-  disabled: true
-  name: 'dsh-token-viewer' # dsh-market
 
 # GigaChat через локальный OpenAI-совместимый шлюз
 # (C:\Users\nicko\gigachain\gateway\gateway.py, порт 8877)
@@ -87,3 +84,9 @@
   config:
     provider: deepseek-account
     model: deepseek-flash
+- id: ui-token-viewer
+  disabled: true
+  name: 'dsh-token-viewer' # dsh-market
+- id: dsh-whale-widget
+  disabled: true
+  name: 'dsh-whale-widget' # dsh-market

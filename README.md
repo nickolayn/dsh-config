@@ -82,9 +82,26 @@ cd "$env:USERPROFILE\dsh-config"
 | `GET /health` | самопроверка и текущие настройки |
 | `GET /crm/state` | прокси на `{crm}/api/state` — 100 заявок, SLA считает CRM |
 | `GET /crm/task/:id` | одна заявка |
-| `POST /crm/tasks`, `POST /crm/tasks/:id/status` | запись (нужен `userId` в настройках) |
-| `GET /teamjet/probe` | проверка доступа к TeamJet (нужны токен и путь) |
-| `GET /teamjet/tasks` | список заявок TeamJet (нужны токен и путь) |
+| `POST /crm/tasks`, `POST /crm/tasks/:id/status` | запись (нужен `crm.userId` в настройках) |
+| `GET /teamjet/health` | кто я в TeamJet (проверка входа) |
+| `GET /teamjet/tasks` | заявки TeamJet: `?status=1,2,4,6&limit=50&offset=0` |
+| `GET /teamjet/summary` | счётчики по статусам (кеш 1 мин) |
+| `GET /teamjet/users` | справочник сотрудников: id → имя |
+
+### Вход в TeamJet
+
+TeamJet авторизует через Keycloak, публичного API-ключа нет, поэтому мост логинится сам:
+
+| Шаг | Запрос |
+|---|---|
+| вход | `POST /api/keycloak/login` с `{login, password, hotelkey}` |
+| обновление | `POST /api/keycloak/refresh` с `refresh_token` |
+| заявки | `POST /api/tasks/v2/list` + `Authorization: Bearer …` (не больше 50 за страницу) |
+
+Логин, пароль и `hotelkey` лежат **только** в `bridge/bridge.config.json` на этом компьютере
+(файл в `.gitignore`, в браузер не попадает). Пароль там в открытом виде — это цена локального
+моста; для рабочей машины лучше отдельный сервисный аккаунт TeamJet.
+
 
 ## Если PowerShell запрещает скрипты
 

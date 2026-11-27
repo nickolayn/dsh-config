@@ -4,10 +4,11 @@
   "dependencies": {
     "@dsh-local/view-f3397ba6-d12b-47df-93a4-aa5ca4435644": "link:./created-plugins/f3397ba6-d12b-47df-93a4-aa5ca4435644",
     "@dsh-local/view-hotel-crm": "link:./created-plugins/hotel-crm",
+    "@dsh-local/view-teamjet": "link:./created-plugins/teamjet",
     "dsh-kimino-theme": "68.4.2",
     "dsh-token-viewer": "github:qwert702/dsh-token-viewer",
     "dsh-whale-widget": "0.4.2",
-    "dshmarket": "1.80.0"
+    "dshmarket": "1.84.2"
   },
   "dsh": {
     "profile": {
@@ -19,10 +20,10 @@
         "@deepseek-ai/dsh-experimental-voice-input-bundle",
         "@deepseek-ai/dsh-personalized-recommendations",
         "dshmarket",
-        "dsh-kimino-theme",
-        "dsh-whale-widget",
         "@dsh-local/view-f3397ba6-d12b-47df-93a4-aa5ca4435644",
-        "@dsh-local/view-hotel-crm"
+        "dsh-kimino-theme",
+        "@dsh-local/view-hotel-crm",
+        "@dsh-local/view-teamjet"
       ]
     }
   }

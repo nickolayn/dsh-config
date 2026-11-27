@@ -1,0 +1,8 @@
+{
+  "meta": {
+    "title": "TeamJet 工单",
+    "description": "TeamJet 工单实时面板：新建、处理中、已接收与已推迟数量，紧急程度、期限与负责人，通过本地桥接服务读取。",
+    "detail": "docs/DETAIL.md"
+  },
+  "panel": "TeamJet"
+}

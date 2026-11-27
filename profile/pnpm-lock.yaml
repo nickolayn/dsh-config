@@ -14,6 +14,9 @@ importers:
       '@dsh-local/view-hotel-crm':
         specifier: link:./created-plugins/hotel-crm
         version: link:created-plugins/hotel-crm
+      '@dsh-local/view-teamjet':
+        specifier: link:./created-plugins/teamjet
+        version: link:created-plugins/teamjet
       dsh-kimino-theme:
         specifier: 68.4.2
         version: 68.4.2
@@ -24,8 +27,8 @@ importers:
         specifier: 0.4.2
         version: 0.4.2
       dshmarket:
-        specifier: 1.80.0
-        version: 1.80.0
+        specifier: 1.84.2
+        version: 1.84.2
 
 packages:
 
@@ -42,8 +45,8 @@ packages:
   dsh-whale-widget@0.4.2:
     resolution: {integrity: sha512-aGDUfd3b2Abv4PoUn1KtnlasOIkoqgvIOR2+rAIEPDOt1qlHB7emlTq+4zdyoV5ZiicS+tkugPk86GyVUoDggQ==}
 
-  dshmarket@1.80.0:
-    resolution: {integrity: sha512-TIM9/tMPOZ/kY/hIojeYbglI3noNQXEA2uQR0CCvVakyzCxAPxRLjRkktPPOp5BJiEX74el6ynlrdaSEzunuYA==}
+  dshmarket@1.84.2:
+    resolution: {integrity: sha512-3EKXhI11oZNDoqynfT0T+fyvJ4j9z9Hb6rWYx+eNUB0pG6o2c8Q+HXk+5KWHVxKS881yzXLglZ+Bin1HjDfyng==}
     peerDependencies:
       '@deepseek-ai/cordis': ^4.0.1
       '@deepseek-ai/dsh-settings': ^0.1.0-rc.7 || ^0.1.1-rc.2 || ^0.1.2-alpha.2 || ^0.2.0-rc.1 || ^0.2.1-alpha.3 || ^0.2.1-rc.1
@@ -72,7 +75,7 @@ snapshots:
 
   dsh-whale-widget@0.4.2: {}
 
-  dshmarket@1.80.0:
+  dshmarket@1.84.2:
     dependencies:
       js-yaml: 4.3.2
       undici: 7.30.2

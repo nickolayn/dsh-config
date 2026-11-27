@@ -1,0 +1,8 @@
+{
+  "meta": {
+    "title": "TeamJet requests",
+    "description": "Live TeamJet request board: new, in-progress, accepted and postponed counts, urgency, deadlines and assignees, read through the local bridge.",
+    "detail": "docs/DETAIL.md"
+  },
+  "panel": "TeamJet"
+}
